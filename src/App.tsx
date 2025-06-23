@@ -8,6 +8,12 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import PostProject from "./pages/PostProject";
+import ProjectDetail from "./pages/ProjectDetail";
+import Profile from "./pages/Profile";
+import Messages from "./pages/Messages";
+import Dashboard from "./pages/Dashboard";
+import MyProjects from "./pages/MyProjects";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +68,47 @@ const App = () => (
                 <PublicRoute>
                   <Auth />
                 </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/post-project" 
+              element={
+                <ProtectedRoute>
+                  <PostProject />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/project/:id" element={<ProjectDetail />} />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </Protecte Route>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-projects" 
+              element={
+                <ProtectedRoute>
+                  <MyProjects />
+                </ProtectedRoute>
               } 
             />
             <Route path="*" element={<NotFound />} />

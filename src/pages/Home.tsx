@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect } from 'react';
@@ -8,11 +9,13 @@ import Navbar from '@/components/Navbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, ShoppingBag } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -52,6 +55,15 @@ const Home = () => {
     'Writing',
     'Marketing',
     'Data Science',
+    'Academic Research',
+    'Tutoring',
+    'Assignment Help',
+    'Thesis Writing',
+    'Lab Report',
+    'Programming Assignment',
+    'Math Help',
+    'Language Translation',
+    'Presentation Design',
     'Other'
   ];
 
@@ -72,9 +84,21 @@ const Home = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Find Your Next Project
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
             Connect with clients and grow your freelance business on TUDU marketplace
           </p>
+          
+          {/* Quick Access Buttons */}
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <Button
+              onClick={() => navigate('/marketplace')}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              College Marketplace
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filter Section */}

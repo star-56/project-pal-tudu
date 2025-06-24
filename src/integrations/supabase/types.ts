@@ -57,6 +57,72 @@ export type Database = {
           },
         ]
       }
+      marketplace_items: {
+        Row: {
+          buyer_id: string | null
+          category: string
+          condition: string | null
+          contact_info: string | null
+          created_at: string | null
+          description: string
+          id: string
+          images: string[] | null
+          location: string | null
+          price: number
+          seller_id: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_id?: string | null
+          category: string
+          condition?: string | null
+          contact_info?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          images?: string[] | null
+          location?: string | null
+          price: number
+          seller_id?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_id?: string | null
+          category?: string
+          condition?: string | null
+          contact_info?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          images?: string[] | null
+          location?: string | null
+          price?: number
+          seller_id?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_items_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_items_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -102,10 +168,15 @@ export type Database = {
           bio: string | null
           created_at: string | null
           full_name: string | null
+          graduation_year: number | null
           hourly_rate: number | null
           id: string
+          institution: string | null
+          is_student: boolean | null
           location: string | null
+          major: string | null
           skills: string[] | null
+          student_id: string | null
           updated_at: string | null
           username: string | null
         }
@@ -114,10 +185,15 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           full_name?: string | null
+          graduation_year?: number | null
           hourly_rate?: number | null
           id: string
+          institution?: string | null
+          is_student?: boolean | null
           location?: string | null
+          major?: string | null
           skills?: string[] | null
+          student_id?: string | null
           updated_at?: string | null
           username?: string | null
         }
@@ -126,10 +202,15 @@ export type Database = {
           bio?: string | null
           created_at?: string | null
           full_name?: string | null
+          graduation_year?: number | null
           hourly_rate?: number | null
           id?: string
+          institution?: string | null
+          is_student?: boolean | null
           location?: string | null
+          major?: string | null
           skills?: string[] | null
+          student_id?: string | null
           updated_at?: string | null
           username?: string | null
         }

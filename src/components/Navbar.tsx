@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, User, LogOut, MessageSquare, LayoutDashboard } from 'lucide-react';
+import { PlusCircle, User, LogOut, MessageSquare, LayoutDashboard, ShoppingBag } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +43,15 @@ const Navbar = () => {
                 >
                   <PlusCircle className="h-4 w-4" />
                   Post Project
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/marketplace')}
+                  className="flex items-center gap-2"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Marketplace
                 </Button>
                 
                 <Button

@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,6 +23,11 @@ const Profile = () => {
     bio: '',
     location: '',
     hourly_rate: '',
+    is_student: false,
+    student_id: '',
+    institution: '',
+    graduation_year: '',
+    major: '',
   });
   
   const [skills, setSkills] = useState<string[]>([]);
@@ -51,6 +58,11 @@ const Profile = () => {
           bio: data.bio || '',
           location: data.location || '',
           hourly_rate: data.hourly_rate ? data.hourly_rate.toString() : '',
+          is_student: data.is_student || false,
+          student_id: data.student_id || '',
+          institution: data.institution || '',
+          graduation_year: data.graduation_year ? data.graduation_year.toString() : '',
+          major: data.major || '',
         });
         setSkills(data.skills || []);
       }
@@ -94,6 +106,11 @@ const Profile = () => {
           location: profile.location,
           hourly_rate: profile.hourly_rate ? parseFloat(profile.hourly_rate) : null,
           skills: skills,
+          is_student: profile.is_student,
+          student_id: profile.student_id || null,
+          institution: profile.institution || null,
+          graduation_year: profile.graduation_year ? parseInt(profile.graduation_year) : null,
+          major: profile.major || null,
           updated_at: new Date().toISOString(),
         });
 
@@ -185,6 +202,58 @@ const Profile = () => {
                     placeholder="Your hourly rate"
                   />
                 </div>
+              </div>
+
+              {/* Student Information Section */}
+              <div className="border-t pt-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Checkbox
+                    id="is_student"
+                    checked={profile.is_student}
+                    onCheckedChange={(checked) => setProfile({ ...profile, is_student: !!checked })}
+                  />
+                  <label htmlFor="is_student" className="text-sm font-medium">
+                    I am a student
+                  </label>
+                </div>
+
+                {profile.is_student && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Student ID</label>
+                      <Input
+                        value={profile.student_id}
+                        onChange={(e) => setProfile({ ...profile, student_id: e.target.value })}
+                        placeholder="Your student ID"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Institution</label>
+                      <Input
+                        value={profile.institution}
+                        onChange={(e) => setProfile({ ...profile, institution: e.target.value })}
+                        placeholder="Your school/university"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Graduation Year</label>
+                      <Input
+                        type="number"
+                        value={profile.graduation_year}
+                        onChange={(e) => setProfile({ ...profile, graduation_year: e.target.value })}
+                        placeholder="Expected graduation year"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Major/Field of Study</label>
+                      <Input
+                        value={profile.major}
+                        onChange={(e) => setProfile({ ...profile, major: e.target.value })}
+                        placeholder="Your major or field of study"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

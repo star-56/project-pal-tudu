@@ -17,7 +17,7 @@ interface Project {
   status: string;
   client_id: string;
   freelancer_id: string;
-  profiles: {
+  client_profile: {
     full_name: string;
   } | null;
   freelancer_profile: {
@@ -68,10 +68,10 @@ const Messages = () => {
           status, 
           client_id, 
           freelancer_id,
-          profiles:client_id (
+          client_profile:profiles!projects_client_id_fkey (
             full_name
           ),
-          freelancer_profile:freelancer_id (
+          freelancer_profile:profiles!projects_freelancer_id_fkey (
             full_name
           )
         `)
@@ -176,7 +176,7 @@ const Messages = () => {
     if (user?.id === project.client_id) {
       return project.freelancer_profile?.full_name || 'Freelancer';
     } else {
-      return project.profiles?.full_name || 'Client';
+      return project.client_profile?.full_name || 'Client';
     }
   };
 

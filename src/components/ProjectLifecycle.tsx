@@ -134,7 +134,7 @@ const ProjectLifecycle = ({ project, currentUserId, onStatusUpdate }: ProjectLif
                 <div className="text-sm text-gray-600">{stage.description}</div>
               </div>
               {index === currentStageIndex && (
-                <Badge variant="outline" size="sm">Current</Badge>
+                <Badge variant="outline">Current</Badge>
               )}
             </div>
           ))}

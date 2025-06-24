@@ -30,7 +30,7 @@ interface Project {
   created_at: string;
   client_id: string;
   freelancer_id: string;
-  profiles: {
+  client_profile: {
     full_name: string;
     location: string;
   };
@@ -84,7 +84,7 @@ const ProjectDetail = () => {
         .from('projects')
         .select(`
           *,
-          profiles:client_id (
+          client_profile:profiles!projects_client_id_fkey (
             full_name,
             location
           )
@@ -221,10 +221,10 @@ const ProjectDetail = () => {
                     <DollarSign className="h-4 w-4" />
                     {formatBudget(project.budget_min, project.budget_max)}
                   </div>
-                  {project.profiles?.location && (
+                  {project.client_profile?.location && (
                     <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
-                      {project.profiles.location}
+                      {project.client_profile.location}
                     </div>
                   )}
                   {project.deadline && (
@@ -258,7 +258,7 @@ const ProjectDetail = () => {
                   
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <User className="h-4 w-4" />
-                    <span>Posted by {project.profiles?.full_name || 'Unknown'}</span>
+                    <span>Posted by {project.client_profile?.full_name || 'Unknown'}</span>
                     <span>•</span>
                     <span>{formatDate(project.created_at)}</span>
                   </div>

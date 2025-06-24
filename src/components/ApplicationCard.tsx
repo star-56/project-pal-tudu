@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { User, Clock, DollarSign, MessageCircle, CheckCircle, XCircle } from 'lucide-react';
 
 interface Application {
@@ -37,9 +37,19 @@ interface ApplicationCardProps {
 
 const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate }: ApplicationCardProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleApprove = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to perform this action.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Update application status
@@ -89,6 +99,15 @@ const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate 
   };
 
   const handleReject = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to perform this action.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { error } = await supabase
@@ -226,7 +245,7 @@ const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate 
               </DialogContent>
             </Dialog>
 
-            {isOwner && application.status === 'pending' && (
+            {isOwner && application.status === 'pending' && user && (
               <div className="flex gap-2">
                 <Button
                   onClick={handleApprove}

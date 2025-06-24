@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -14,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, DollarSign, MapPin, User, Users, MessageCircle } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, User, Users, MessageCircle, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Project {
@@ -56,7 +55,7 @@ interface Application {
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -74,9 +73,11 @@ const ProjectDetail = () => {
   useEffect(() => {
     if (id) {
       fetchProject();
-      fetchApplications();
+      if (user) {
+        fetchApplications();
+      }
     }
-  }, [id]);
+  }, [id, user]);
 
   const fetchProject = async () => {
     try {
@@ -107,6 +108,8 @@ const ProjectDetail = () => {
   };
 
   const fetchApplications = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('applications')
@@ -134,7 +137,15 @@ const ProjectDetail = () => {
 
   const submitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !project) return;
+    if (!user || !project) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to submit a proposal.",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -167,6 +178,15 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleSignInPrompt = () => {
+    toast({
+      title: "Sign In Required",
+      description: "Please sign in to access this feature.",
+      variant: "destructive",
+    });
+    navigate('/auth');
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -178,7 +198,7 @@ const ProjectDetail = () => {
     return 'Budget negotiable';
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
@@ -203,7 +223,8 @@ const ProjectDetail = () => {
   const isOwner = user?.id === project.client_id;
   const isAssignedFreelancer = user?.id === project.freelancer_id;
   const hasApplied = applications.some(app => app.profiles?.id === user?.id);
-  const canApply = !isOwner && !isAssignedFreelancer && !hasApplied && project.status === 'open';
+  const canApply = user && !isOwner && !isAssignedFreelancer && !hasApplied && project.status === 'open';
+  const canViewApplications = user && (isOwner || isAssignedFreelancer);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -273,7 +294,7 @@ const ProjectDetail = () => {
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="applications" className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Applications ({applications.length})
+                      Applications ({canViewApplications ? applications.length : '?'})
                     </TabsTrigger>
                     {(isOwner || isAssignedFreelancer) && (
                       <TabsTrigger value="lifecycle">
@@ -283,7 +304,26 @@ const ProjectDetail = () => {
                   </TabsList>
                   
                   <TabsContent value="applications" className="p-6">
-                    {applications.length === 0 ? (
+                    {!user ? (
+                      <div className="text-center py-8">
+                        <Lock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                        <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
+                        <p className="text-gray-600 mb-4">
+                          You need to sign in to view applications for this project.
+                        </p>
+                        <Button onClick={handleSignInPrompt}>
+                          Sign In to View Applications
+                        </Button>
+                      </div>
+                    ) : !canViewApplications ? (
+                      <div className="text-center py-8">
+                        <Lock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                        <h3 className="text-lg font-semibold mb-2">Access Restricted</h3>
+                        <p className="text-gray-600">
+                          Only the project owner can view applications.
+                        </p>
+                      </div>
+                    ) : applications.length === 0 ? (
                       <p className="text-gray-600 text-center py-8">No applications yet.</p>
                     ) : (
                       <div className="space-y-4">
@@ -316,21 +356,40 @@ const ProjectDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {canApply && (
+            {/* Application Form */}
+            {project.status === 'open' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Apply for this Project</CardTitle>
                 </CardHeader>
                 
                 <CardContent>
-                  {!showApplicationForm ? (
+                  {!user ? (
+                    <div className="text-center">
+                      <Lock className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+                      <p className="text-gray-600 mb-4">
+                        Sign in to submit your proposal
+                      </p>
+                      <Button onClick={handleSignInPrompt} className="w-full">
+                        Sign In to Apply
+                      </Button>
+                    </div>
+                  ) : isOwner ? (
+                    <div className="text-center text-gray-600">
+                      <p>You cannot apply to your own project.</p>
+                    </div>
+                  ) : hasApplied ? (
+                    <div className="text-center text-gray-600">
+                      <p>You have already applied to this project.</p>
+                    </div>
+                  ) : canApply && !showApplicationForm ? (
                     <Button 
                       onClick={() => setShowApplicationForm(true)}
                       className="w-full"
                     >
                       Submit Proposal
                     </Button>
-                  ) : (
+                  ) : canApply && showApplicationForm ? (
                     <form onSubmit={submitApplication} className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Your Proposal</label>
@@ -375,7 +434,7 @@ const ProjectDetail = () => {
                         </Button>
                       </div>
                     </form>
-                  )}
+                  ) : null}
                 </CardContent>
               </Card>
             )}
@@ -413,7 +472,7 @@ const ProjectDetail = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Applications:</span>
-                  <span>{applications.length}</span>
+                  <span>{canViewApplications ? applications.length : 'Sign in to view'}</span>
                 </div>
                 {project.freelancer_id && (
                   <div className="flex justify-between">

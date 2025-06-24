@@ -1,4 +1,5 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';

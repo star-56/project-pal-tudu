@@ -1,4 +1,5 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,7 +96,17 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMyApplications(data || []);
+      setMyApplications(
+        (data || []).map((application: any) => ({
+          ...application,
+          projects: {
+            ...application.projects,
+            profiles: application.projects?.profiles && typeof application.projects.profiles === 'object' && 'full_name' in application.projects.profiles
+              ? application.projects.profiles
+              : { full_name: 'Unknown' }
+          }
+        }))
+      );
     } catch (error) {
       console.error('Error fetching applications:', error);
     } finally {

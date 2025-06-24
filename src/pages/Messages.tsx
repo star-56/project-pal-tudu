@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,8 +14,15 @@ import { useToast } from '@/hooks/use-toast';
 interface Project {
   id: string;
   title: string;
+  status: string;
   client_id: string;
   freelancer_id: string;
+  profiles: {
+    full_name: string;
+  } | null;
+  freelancer_profile: {
+    full_name: string;
+  } | null;
 }
 
 interface Message {
@@ -54,9 +62,22 @@ const Messages = () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, client_id, freelancer_id')
+        .select(`
+          id, 
+          title, 
+          status, 
+          client_id, 
+          freelancer_id,
+          profiles:client_id (
+            full_name
+          ),
+          freelancer_profile:freelancer_id (
+            full_name
+          )
+        `)
         .or(`client_id.eq.${user?.id},freelancer_id.eq.${user?.id}`)
-        .not('freelancer_id', 'is', null);
+        .not('freelancer_id', 'is', null)
+        .in('status', ['assigned', 'in_progress', 'review', 'revision', 'completed']);
 
       if (error) throw error;
       setProjects(data || []);
@@ -151,6 +172,29 @@ const Messages = () => {
     return new Date(dateString).toLocaleString();
   };
 
+  const getProjectPartner = (project: Project) => {
+    if (user?.id === project.client_id) {
+      return project.freelancer_profile?.full_name || 'Freelancer';
+    } else {
+      return project.profiles?.full_name || 'Client';
+    }
+  };
+
+  const getProjectRole = (project: Project) => {
+    return user?.id === project.client_id ? 'Client' : 'Freelancer';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'assigned': return 'default';
+      case 'in_progress': return 'default';
+      case 'review': return 'secondary';
+      case 'revision': return 'destructive';
+      case 'completed': return 'default';
+      default: return 'secondary';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -171,11 +215,11 @@ const Messages = () => {
           {/* Project List */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle>Projects</CardTitle>
+              <CardTitle>Active Projects</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {projects.length === 0 ? (
-                <p className="p-4 text-gray-600 text-center">No active projects</p>
+                <p className="p-4 text-gray-600 text-center">No active projects with messages</p>
               ) : (
                 <div className="space-y-1">
                   {projects.map((project) => (
@@ -187,8 +231,14 @@ const Messages = () => {
                       }`}
                     >
                       <div className="font-medium truncate">{project.title}</div>
-                      <div className="text-sm text-gray-600">
-                        {project.client_id === user?.id ? 'As Client' : 'As Freelancer'}
+                      <div className="text-sm text-gray-600 flex items-center justify-between">
+                        <span>With {getProjectPartner(project)}</span>
+                        <Badge variant={getStatusColor(project.status) as any} className="text-xs">
+                          {project.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Role: {getProjectRole(project)}
                       </div>
                     </button>
                   ))}
@@ -200,9 +250,19 @@ const Messages = () => {
           {/* Messages */}
           <Card className="lg:col-span-3 flex flex-col">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {selectedProject ? selectedProject.title : 'Select a project'}
+              <CardTitle className="flex items-center justify-between">
+                <span>{selectedProject ? selectedProject.title : 'Select a project'}</span>
+                {selectedProject && (
+                  <Badge variant={getStatusColor(selectedProject.status) as any}>
+                    {selectedProject.status.replace('_', ' ')}
+                  </Badge>
+                )}
               </CardTitle>
+              {selectedProject && (
+                <p className="text-sm text-gray-600">
+                  Chatting with {getProjectPartner(selectedProject)}
+                </p>
+              )}
             </CardHeader>
             
             {selectedProject && (

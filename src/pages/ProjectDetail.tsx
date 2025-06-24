@@ -1,16 +1,20 @@
+
 "use client";
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
+import ApplicationCard from '@/components/ApplicationCard';
+import ProjectLifecycle from '@/components/ProjectLifecycle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, DollarSign, MapPin, User, Clock } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, DollarSign, MapPin, User, Users, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Project {
@@ -25,6 +29,7 @@ interface Project {
   status: string;
   created_at: string;
   client_id: string;
+  freelancer_id: string;
   profiles: {
     full_name: string;
     location: string;
@@ -39,11 +44,13 @@ interface Application {
   status: string;
   created_at: string;
   profiles: {
+    id: string;
     full_name: string;
     avatar_url: string;
     bio: string;
     skills: string[];
     hourly_rate: number;
+    location: string;
   };
 }
 
@@ -106,11 +113,13 @@ const ProjectDetail = () => {
         .select(`
           *,
           profiles:freelancer_id (
+            id,
             full_name,
             avatar_url,
             bio,
             skills,
-            hourly_rate
+            hourly_rate,
+            location
           )
         `)
         .eq('project_id', id)
@@ -192,7 +201,9 @@ const ProjectDetail = () => {
   }
 
   const isOwner = user?.id === project.client_id;
-  const hasApplied = applications.some(app => app.profiles && user?.id);
+  const isAssignedFreelancer = user?.id === project.freelancer_id;
+  const hasApplied = applications.some(app => app.profiles?.id === user?.id);
+  const canApply = !isOwner && !isAssignedFreelancer && !hasApplied && project.status === 'open';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -255,62 +266,57 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Applications Section */}
+            {/* Applications and Lifecycle Tabs */}
             <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Applications ({applications.length})</CardTitle>
-              </CardHeader>
-              
-              <CardContent>
-                {applications.length === 0 ? (
-                  <p className="text-gray-600 text-center py-4">No applications yet.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {applications.map((application) => (
-                      <div key={application.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-semibold">{application.profiles?.full_name}</h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <span>${application.bid_amount}</span>
-                              {application.estimated_duration && (
-                                <>
-                                  <span>•</span>
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {application.estimated_duration}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <Badge variant={application.status === 'accepted' ? 'default' : 'secondary'}>
-                            {application.status}
-                          </Badge>
-                        </div>
-                        
-                        <p className="text-gray-700 mb-3">{application.proposal}</p>
-                        
-                        {application.profiles?.skills && application.profiles.skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {application.profiles.skills.slice(0, 5).map((skill, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {skill}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+              <CardContent className="p-0">
+                <Tabs defaultValue="applications" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="applications" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Applications ({applications.length})
+                    </TabsTrigger>
+                    {(isOwner || isAssignedFreelancer) && (
+                      <TabsTrigger value="lifecycle">
+                        Project Status
+                      </TabsTrigger>
+                    )}
+                  </TabsList>
+                  
+                  <TabsContent value="applications" className="p-6">
+                    {applications.length === 0 ? (
+                      <p className="text-gray-600 text-center py-8">No applications yet.</p>
+                    ) : (
+                      <div className="space-y-4">
+                        {applications.map((application) => (
+                          <ApplicationCard
+                            key={application.id}
+                            application={application}
+                            projectId={project.id}
+                            isOwner={isOwner}
+                            onApplicationUpdate={fetchApplications}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    )}
+                  </TabsContent>
+                  
+                  {(isOwner || isAssignedFreelancer) && (
+                    <TabsContent value="lifecycle" className="p-6">
+                      <ProjectLifecycle
+                        project={project}
+                        currentUserId={user?.id || ''}
+                        onStatusUpdate={fetchProject}
+                      />
+                    </TabsContent>
+                  )}
+                </Tabs>
               </CardContent>
             </Card>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {!isOwner && user && (
+            {canApply && (
               <Card>
                 <CardHeader>
                   <CardTitle>Apply for this Project</CardTitle>
@@ -321,9 +327,8 @@ const ProjectDetail = () => {
                     <Button 
                       onClick={() => setShowApplicationForm(true)}
                       className="w-full"
-                      disabled={hasApplied}
                     >
-                      {hasApplied ? 'Already Applied' : 'Submit Proposal'}
+                      Submit Proposal
                     </Button>
                   ) : (
                     <form onSubmit={submitApplication} className="space-y-4">
@@ -374,6 +379,23 @@ const ProjectDetail = () => {
                 </CardContent>
               </Card>
             )}
+
+            {(project.status === 'assigned' || project.status === 'in_progress' || project.status === 'review' || project.status === 'revision') && (isOwner || isAssignedFreelancer) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Communication</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => navigate('/messages')}
+                    className="w-full"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Go to Messages
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
             
             <Card>
               <CardHeader>
@@ -387,12 +409,18 @@ const ProjectDetail = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Status:</span>
-                  <Badge>{project.status}</Badge>
+                  <Badge>{project.status.replace('_', ' ')}</Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Applications:</span>
                   <span>{applications.length}</span>
                 </div>
+                {project.freelancer_id && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Assigned:</span>
+                    <span>Yes</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

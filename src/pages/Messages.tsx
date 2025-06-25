@@ -1,6 +1,6 @@
 
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
@@ -38,12 +38,17 @@ interface Message {
 const Messages = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (user) {
@@ -57,6 +62,10 @@ const Messages = () => {
       subscribeToMessages();
     }
   }, [selectedProject]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const fetchProjects = async () => {
     try {
@@ -80,6 +89,8 @@ const Messages = () => {
         .in('status', ['assigned', 'in_progress', 'review', 'revision', 'completed']);
 
       if (error) throw error;
+      
+      console.log('Fetched projects:', data);
       setProjects(data || []);
       
       if (data && data.length > 0) {
@@ -101,6 +112,7 @@ const Messages = () => {
     if (!selectedProject) return;
 
     try {
+      console.log('Fetching messages for project:', selectedProject.id);
       const { data, error } = await supabase
         .from('messages')
         .select(`
@@ -113,15 +125,23 @@ const Messages = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      console.log('Fetched messages:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load messages.",
+        variant: "destructive",
+      });
     }
   };
 
   const subscribeToMessages = () => {
     if (!selectedProject) return;
 
+    console.log('Subscribing to messages for project:', selectedProject.id);
+    
     const channel = supabase
       .channel(`messages-${selectedProject.id}`)
       .on(
@@ -132,13 +152,15 @@ const Messages = () => {
           table: 'messages',
           filter: `project_id=eq.${selectedProject.id}`,
         },
-        () => {
+        (payload) => {
+          console.log('New message received:', payload);
           fetchMessages();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Unsubscribing from messages');
       supabase.removeChannel(channel);
     };
   };
@@ -148,6 +170,12 @@ const Messages = () => {
     if (!user || !selectedProject || !newMessage.trim()) return;
 
     try {
+      console.log('Sending message:', {
+        project_id: selectedProject.id,
+        sender_id: user.id,
+        content: newMessage.trim(),
+      });
+
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -157,7 +185,11 @@ const Messages = () => {
         });
 
       if (error) throw error;
+      
+      console.log('Message sent successfully');
       setNewMessage('');
+      // Refresh messages immediately
+      fetchMessages();
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -200,7 +232,12 @@ const Messages = () => {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="text-center">Loading...</div>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="text-gray-600">Loading messages...</div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -219,19 +256,22 @@ const Messages = () => {
             </CardHeader>
             <CardContent className="p-0">
               {projects.length === 0 ? (
-                <p className="p-4 text-gray-600 text-center">No active projects with messages</p>
+                <div className="p-4 text-center">
+                  <User className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-gray-600 text-sm">No active projects with messaging available</p>
+                </div>
               ) : (
                 <div className="space-y-1">
                   {projects.map((project) => (
                     <button
                       key={project.id}
                       onClick={() => setSelectedProject(project)}
-                      className={`w-full text-left p-3 hover:bg-gray-50 border-b ${
+                      className={`w-full text-left p-3 hover:bg-gray-50 border-b transition-colors ${
                         selectedProject?.id === project.id ? 'bg-blue-50 border-blue-200' : ''
                       }`}
                     >
-                      <div className="font-medium truncate">{project.title}</div>
-                      <div className="text-sm text-gray-600 flex items-center justify-between">
+                      <div className="font-medium truncate mb-1">{project.title}</div>
+                      <div className="text-sm text-gray-600 flex items-center justify-between mb-1">
                         <span>With {getProjectPartner(project)}</span>
                         <Badge variant={getStatusColor(project.status) as any} className="text-xs">
                           {project.status.replace('_', ' ')}
@@ -265,11 +305,13 @@ const Messages = () => {
               )}
             </CardHeader>
             
-            {selectedProject && (
+            {selectedProject ? (
               <>
-                <CardContent className="flex-1 overflow-y-auto">
+                <CardContent className="flex-1 overflow-y-auto max-h-96">
                   {messages.length === 0 ? (
-                    <p className="text-gray-600 text-center py-8">No messages yet. Start the conversation!</p>
+                    <div className="text-center py-8">
+                      <div className="text-gray-600">No messages yet. Start the conversation!</div>
+                    </div>
                   ) : (
                     <div className="space-y-4">
                       {messages.map((message) => (
@@ -289,13 +331,14 @@ const Messages = () => {
                             <div className="text-sm font-medium mb-1">
                               {message.profiles?.full_name || 'Unknown User'}
                             </div>
-                            <div>{message.content}</div>
+                            <div className="break-words">{message.content}</div>
                             <div className="text-xs mt-1 opacity-70">
                               {formatTime(message.created_at)}
                             </div>
                           </div>
                         </div>
                       ))}
+                      <div ref={messagesEndRef} />
                     </div>
                   )}
                 </CardContent>
@@ -307,13 +350,21 @@ const Messages = () => {
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Type your message..."
                       className="flex-1"
+                      disabled={!selectedProject}
                     />
-                    <Button type="submit" disabled={!newMessage.trim()}>
+                    <Button type="submit" disabled={!newMessage.trim() || !selectedProject}>
                       <Send className="h-4 w-4" />
                     </Button>
                   </form>
                 </div>
               </>
+            ) : (
+              <CardContent className="flex-1 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <User className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                  <p>Select a project to start messaging</p>
+                </div>
+              </CardContent>
             )}
           </Card>
         </div>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate 
   const { toast } = useToast();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [buttonsVisible, setButtonsVisible] = useState(application.status === 'pending');
 
   const handleApprove = async () => {
     if (!user) {
@@ -80,6 +82,9 @@ const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate 
 
       if (rejectError) throw rejectError;
 
+      // Hide buttons after successful approval
+      setButtonsVisible(false);
+
       toast({
         title: "Success!",
         description: "Application approved and project assigned.",
@@ -116,6 +121,9 @@ const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate 
         .eq('id', application.id);
 
       if (error) throw error;
+
+      // Hide buttons after successful rejection
+      setButtonsVisible(false);
 
       toast({
         title: "Application rejected",
@@ -245,7 +253,7 @@ const ApplicationCard = ({ application, projectId, isOwner, onApplicationUpdate 
               </DialogContent>
             </Dialog>
 
-            {isOwner && application.status === 'pending' && user && (
+            {isOwner && buttonsVisible && user && (
               <div className="flex gap-2">
                 <Button
                   onClick={handleApprove}

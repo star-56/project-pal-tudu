@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -81,7 +80,7 @@ const Marketplace = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as MarketplaceItem[];
+      return data;
     },
   });
 
@@ -367,7 +366,7 @@ const Marketplace = () => {
           </div>
         ) : items && items.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {items.map((item: MarketplaceItem) => {
+            {items.map((item) => {
               const IconComponent = getCategoryIcon(item.category);
               return (
                 <Card key={item.id} className="hover:shadow-lg transition-shadow group">

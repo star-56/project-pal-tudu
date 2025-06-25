@@ -23,7 +23,7 @@ interface MarketplaceItem {
   condition: string;
   location: string;
   created_at: string;
-  profiles: {
+  seller_profile: {
     full_name: string;
     institution: string;
   } | null;
@@ -62,7 +62,7 @@ const Marketplace = () => {
         .from('marketplace_items')
         .select(`
           *,
-          profiles:seller_id (
+          seller_profile:profiles!seller_id (
             full_name,
             institution
           )
@@ -400,9 +400,9 @@ const Marketplace = () => {
                         <MapPin className="h-3 w-3" />
                         {item.location}
                       </div>
-                      <div>Seller: {item.profiles?.full_name || 'Unknown'}</div>
-                      {item.profiles?.institution && (
-                        <div>School: {item.profiles.institution}</div>
+                      <div>Seller: {item.seller_profile?.full_name || 'Unknown'}</div>
+                      {item.seller_profile?.institution && (
+                        <div>School: {item.seller_profile.institution}</div>
                       )}
                       <div>Posted: {formatDate(item.created_at)}</div>
                     </div>

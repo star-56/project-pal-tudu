@@ -1,156 +1,170 @@
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import ProjectCard from '@/components/ProjectCard';
-import Navbar from '@/components/Navbar';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, ShoppingBag } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Users, Briefcase, MessageSquare, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
-  const { data: projects, isLoading } = useQuery({
-    queryKey: ['projects', searchTerm, selectedCategory],
-    queryFn: async () => {
-      let query = supabase
-        .from('projects')
-        .select(`
-          *,
-          profiles:client_id (
-            location,
-            full_name
-          )
-        `)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
-
-      if (searchTerm) {
-        query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-      }
-
-      if (selectedCategory !== 'all') {
-        query = query.eq('category', selectedCategory);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const categories = [
-    'Web Development',
-    'Mobile Development',
-    'Design',
-    'Writing',
-    'Marketing',
-    'Data Science',
-    'Academic Research',
-    'Tutoring',
-    'Assignment Help',
-    'Thesis Writing',
-    'Lab Report',
-    'Programming Assignment',
-    'Math Help',
-    'Language Translation',
-    'Presentation Design',
-    'Other'
-  ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Find Your Next Project
+    <div className="notion-page-bg min-h-screen">
+      <div className="notion-container">
+        {/* Hero Section */}
+        <div className="text-center mb-16 animate-fade-in">
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Connect. Collaborate. Create.
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
-            Connect with clients and grow your freelance business on TUDU marketplace
+          <p className="text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+            The ultimate platform for students and professionals to find projects, 
+            collaborate on ideas, and build amazing things together.
           </p>
-          
-          {/* Quick Access Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <Button
-              onClick={() => navigate('/marketplace')}
-              className="flex items-center gap-2"
-              variant="outline"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              College Marketplace
-            </Button>
+          <div className="flex gap-4 justify-center">
+            <Link to="/dashboard">
+              <Button size="lg" className="notion-button-primary h-14 px-8 text-lg">
+                Get Started <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/marketplace">
+              <Button variant="outline" size="lg" className="notion-button h-14 px-8 text-lg">
+                Browse Projects
+              </Button>
+            </Link>
           </div>
         </div>
 
-        {/* Search and Filter Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        {/* Features Grid */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <Card className="notion-card group">
+            <CardHeader>
+              <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Briefcase className="h-8 w-8 text-blue-600" />
+              </div>
+              <CardTitle className="text-2xl">Find Projects</CardTitle>
+              <CardDescription className="text-lg">
+                Discover exciting projects that match your skills and interests
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="notion-card group">
+            <CardHeader>
+              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Users className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl">Collaborate</CardTitle>
+              <CardDescription className="text-lg">
+                Work with talented individuals from around the world
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="notion-card group">
+            <CardHeader>
+              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <MessageSquare className="h-8 w-8 text-purple-600" />
+              </div>
+              <CardTitle className="text-2xl">Connect</CardTitle>
+              <CardDescription className="text-lg">
+                Build lasting professional relationships and networks
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Stats Section */}
+        <Card className="notion-card mb-16">
+          <CardContent className="p-12">
+            <div className="grid md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">1000+</div>
+                <div className="text-muted-foreground">Active Projects</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-green-600 mb-2">5000+</div>
+                <div className="text-muted-foreground">Students</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-purple-600 mb-2">500+</div>
+                <div className="text-muted-foreground">Universities</div>
+              </div>
+              <div>
+                <div className="text-4xl font-bold text-orange-600 mb-2">98%</div>
+                <div className="text-muted-foreground">Success Rate</div>
+              </div>
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="md:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Projects Grid */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="text-gray-600">Loading projects...</div>
-          </div>
-        ) : projects && projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project: any) => (
-              <ProjectCard key={project.id} project={project} />
+        {/* Categories */}
+        <div className="mb-16">
+          <h2 className="text-4xl font-bold text-center mb-12">Popular Categories</h2>
+          <div className="flex flex-wrap gap-4 justify-center">
+            {[
+              "Web Development", "Mobile Apps", "AI/ML", "Data Science", 
+              "Design", "Research", "IoT", "Blockchain", "Gaming", "Robotics"
+            ].map((category) => (
+              <Badge key={category} variant="secondary" className="notion-badge text-lg px-6 py-3">
+                {category}
+              </Badge>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-600 mb-4">No projects found</div>
-            {user && (
-              <Button onClick={() => window.location.href = '/post-project'}>
-                Post the First Project
-              </Button>
-            )}
+        </div>
+
+        {/* Testimonials */}
+        <div className="mb-16">
+          <h2 className="text-4xl font-bold text-center mb-12">What Students Say</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <Card className="notion-card">
+              <CardContent className="p-8">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-lg mb-4">
+                  "This platform helped me find an amazing team for my capstone project. 
+                  We built something incredible together!"
+                </p>
+                <div className="text-sm text-muted-foreground">
+                  - Sarah Chen, Computer Science Student
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="notion-card">
+              <CardContent className="p-8">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-lg mb-4">
+                  "The collaboration tools are fantastic. We completed our project 
+                  ahead of schedule and learned so much!"
+                </p>
+                <div className="text-sm text-muted-foreground">
+                  - Michael Rodriguez, Engineering Student
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+        </div>
+
+        {/* CTA Section */}
+        <Card className="notion-card text-center">
+          <CardContent className="p-12">
+            <h2 className="text-4xl font-bold mb-6">Ready to Start Your Journey?</h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Join thousands of students and professionals who are already building 
+              the future together.
+            </p>
+            <Link to="/auth">
+              <Button size="lg" className="notion-button-primary h-14 px-12 text-lg">
+                Join Now - It's Free
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

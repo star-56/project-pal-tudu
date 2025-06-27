@@ -1,14 +1,132 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Users, Briefcase, MessageSquare, Star } from "lucide-react";
+import { ArrowRight, Users, Briefcase, MessageSquare, Star, ShoppingBag, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import Footer from "@/components/Footer";
 
 const Home = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="notion-page-bg min-h-screen">
-      <div className="notion-container">
+      {/* Island Navbar */}
+      <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 backdrop-blur-md rounded-2xl border border-gray-200 shadow-lg px-6 py-3">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">C</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              CollabHub
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            <Link to="/">
+              <Button variant="ghost" className="notion-button">
+                <Briefcase className="h-4 w-4 mr-2" />
+                Projects
+              </Button>
+            </Link>
+            <Link to="/marketplace">
+              <Button variant="ghost" className="notion-button">
+                <ShoppingBag className="h-4 w-4 mr-2" />
+                Marketplace
+              </Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button variant="ghost" className="notion-button">
+                <Users className="h-4 w-4 mr-2" />
+                Community
+              </Button>
+            </Link>
+            <Link to="/messages">
+              <Button variant="ghost" className="notion-button">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Contact
+              </Button>
+            </Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Link to="/auth">
+              <Button variant="ghost" className="notion-button">
+                Sign In
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button className="notion-button-primary">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden notion-button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-col space-y-2">
+              <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start notion-button">
+                  <Briefcase className="h-4 w-4 mr-3" />
+                  Projects
+                </Button>
+              </Link>
+              <Link to="/marketplace" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start notion-button">
+                  <ShoppingBag className="h-4 w-4 mr-3" />
+                  Marketplace
+                </Button>
+              </Link>
+              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start notion-button">
+                  <Users className="h-4 w-4 mr-3" />
+                  Community
+                </Button>
+              </Link>
+              <Link to="/messages" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full justify-start notion-button">
+                  <MessageSquare className="h-4 w-4 mr-3" />
+                  Contact
+                </Button>
+              </Link>
+              <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full notion-button">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full notion-button-primary">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <div className="notion-container pt-24">
         {/* Hero Section */}
         <div className="text-center mb-16 animate-fade-in">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -151,7 +269,7 @@ const Home = () => {
         </div>
 
         {/* CTA Section */}
-        <Card className="notion-card text-center">
+        <Card className="notion-card text-center mb-16">
           <CardContent className="p-12">
             <h2 className="text-4xl font-bold mb-6">Ready to Start Your Journey?</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -166,6 +284,8 @@ const Home = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Footer />
     </div>
   );
 };

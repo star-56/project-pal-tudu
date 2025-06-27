@@ -1,9 +1,9 @@
-
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
+import ImageUpload from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,7 @@ interface MarketplaceItem {
   category: string;
   condition: string;
   location: string;
+  images: string[];
   created_at: string;
   seller_profile: {
     full_name: string;
@@ -38,8 +39,7 @@ interface NewItemData {
   condition: string;
   location: string;
   contact_info: string;
-  seller_name: string;
-  seller_email: string;
+  images: string[];
 }
 
 const Marketplace = () => {
@@ -59,8 +59,7 @@ const Marketplace = () => {
     condition: '',
     location: '',
     contact_info: '',
-    seller_name: '',
-    seller_email: ''
+    images: []
   });
 
   const { data: items, isLoading, refetch } = useQuery({
@@ -123,6 +122,7 @@ const Marketplace = () => {
       condition: newItem.condition,
       location: newItem.location,
       contact_info: newItem.contact_info,
+      images: newItem.images,
       seller_id: user?.id || null,
     };
 
@@ -147,8 +147,7 @@ const Marketplace = () => {
         condition: '',
         location: '',
         contact_info: '',
-        seller_name: '',
-        seller_email: ''
+        images: []
       });
       refetch();
     } catch (error) {
@@ -318,7 +317,7 @@ const Marketplace = () => {
                   List Item
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg rounded-2xl">
+              <DialogContent className="max-w-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-gray-900">List New Item</DialogTitle>
                 </DialogHeader>
@@ -384,6 +383,13 @@ const Marketplace = () => {
                     className="h-12 rounded-xl border-gray-200"
                     required
                   />
+                  
+                  <ImageUpload
+                    onImagesChange={(imageUrls) => setNewItem({...newItem, images: imageUrls})}
+                    maxImages={5}
+                    maxSizePerImage={5}
+                  />
+                  
                   <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold">
                     List Item
                   </Button>
@@ -451,8 +457,25 @@ const Marketplace = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {items.map((item) => {
               const IconComponent = getCategoryIcon(item.category);
+              const hasImages = item.images && item.images.length > 0;
               return (
                 <Card key={item.id} className="notion-card group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-2xl border-gray-200 overflow-hidden">
+                  {/* Image Carousel */}
+                  {hasImages && (
+                    <div className="aspect-square relative overflow-hidden bg-gray-100">
+                      <img
+                        src={item.images[0]}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {item.images.length > 1 && (
+                        <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md">
+                          +{item.images.length - 1} more
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <CardHeader className="pb-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-2">

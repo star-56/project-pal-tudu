@@ -19,6 +19,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import Navbar from "@/components/Navbar";
 
 // Define interfaces that match the actual database schema
 interface Project {
@@ -93,6 +94,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-[#fefefe]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
+        <Navbar/>
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
